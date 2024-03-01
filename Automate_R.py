@@ -6,7 +6,7 @@ import datetime
 employees = ['Moreen Naitore', 'Sammy Walumoli']
 
 # Load the data
-data = pd.read_excel('/Users/nyagaderrick/Developer/Report_automation/ATT JAN 24_ruaraka.xlsx')
+data = pd.read_excel('data/Feb/ATT FEB 24.xlsx')
 
 # Convert 'Time' to datetime format
 data['Time'] = pd.to_datetime(data['Time'])
@@ -22,7 +22,7 @@ grouped = data.groupby(['Name', 'Date'])
 final_data = pd.DataFrame()
 
 # Create a record for each employee for each day
-for date in pd.date_range(start='2024-01-01', end='2024-01-31').date:
+for date in pd.date_range(start='2024-02-01', end='2024-02-29').date:
     # Skip Sundays
     if date.weekday() == 6:
         continue
@@ -65,7 +65,7 @@ summary.columns = ['Name', 'CHECK IN TIME', 'CHECK OUT TIME']
 
 # Convert 'Date' column to datetime format only for rows that have a date
 # Add a row with the heading 'KENCOM DECEMBER ATTENDANCE' before the summary
-heading = pd.DataFrame([['RUARAKA JANUARY SUMMARY', '', '', '']], columns=['Date', 'Name', 'CHECK IN TIME', 'CHECK OUT TIME'])
+heading = pd.DataFrame([['RUARAKA FEB SUMMARY', '', '', '']], columns=['Date', 'Name', 'CHECK IN TIME', 'CHECK OUT TIME'])
 final_data = pd.concat([final_data, heading], ignore_index=True)
 
 # Add a row with 'NAME', 'CHECK-IN AFTER 7:30 A.M', 'NO CHECK IN/OUT RECORDS'
@@ -77,4 +77,4 @@ summary.columns = ['Name', 'CHECK IN TIME', 'CHECK OUT TIME']
 final_data = pd.concat([final_data, summary], ignore_index=True)
 
 # Save the final report
-final_data.to_excel('/Users/nyagaderrick/Developer/Report_automation/JAN_2024_RUARAKA_report.xlsx', index=False)
+final_data.to_excel('data/Feb/RUARAKA_report.xlsx', index=False)
