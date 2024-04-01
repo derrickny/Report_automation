@@ -6,7 +6,7 @@ import datetime
 employees = ['Moreen Naitore', 'Sammy Walumoli']
 
 # Load the data
-data = pd.read_excel('data/Feb/ATT FEB 24.xlsx')
+data = pd.read_excel('data/March/March.xlsx')
 
 # Convert 'Time' to datetime format
 data['Time'] = pd.to_datetime(data['Time'])
@@ -22,7 +22,7 @@ grouped = data.groupby(['Name', 'Date'])
 final_data = pd.DataFrame()
 
 # Create a record for each employee for each day
-for date in pd.date_range(start='2024-02-01', end='2024-02-29').date:
+for date in pd.date_range(start='2024-03-01', end='2024-03-31').date:
     # Skip Sundays
     if date.weekday() == 6:
         continue
@@ -48,8 +48,8 @@ summary = final_data.copy()
 # Create a mask for rows that contain time data
 mask = summary['CHECK IN TIME'].str.contains(':', na=False)
 
-# Convert '07:30' to a string
-time_to_compare = '07:30'
+# Convert '08:30' to a string
+time_to_compare = '08:30'
 
 # Now you can do the comparison
 summary.loc[mask, 'Late'] = summary.loc[mask, 'CHECK IN TIME'] > time_to_compare
@@ -69,7 +69,7 @@ heading = pd.DataFrame([['RUARAKA FEB SUMMARY', '', '', '']], columns=['Date', '
 final_data = pd.concat([final_data, heading], ignore_index=True)
 
 # Add a row with 'NAME', 'CHECK-IN AFTER 7:30 A.M', 'NO CHECK IN/OUT RECORDS'
-column_names = pd.DataFrame([['NAME', 'CHECK-IN AFTER 7:30 A.M', 'NO CHECK IN/OUT RECORDS', '']], columns=['Date', 'Name', 'CHECK IN TIME', 'CHECK OUT TIME'])
+column_names = pd.DataFrame([['NAME', 'CHECK-IN AFTER 8:30 A.M', 'NO CHECK IN/OUT RECORDS', '']], columns=['Date', 'Name', 'CHECK IN TIME', 'CHECK OUT TIME'])
 final_data = pd.concat([final_data, column_names], ignore_index=True)
 
 # Concatenate final_data and summary
@@ -77,4 +77,4 @@ summary.columns = ['Name', 'CHECK IN TIME', 'CHECK OUT TIME']
 final_data = pd.concat([final_data, summary], ignore_index=True)
 
 # Save the final report
-final_data.to_excel('data/Feb/RUARAKA_report.xlsx', index=False)
+final_data.to_excel('report/March/RUARAKA_report.xlsx', index=False)

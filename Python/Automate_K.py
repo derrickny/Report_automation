@@ -23,10 +23,10 @@ def generate_attendance_records(employees, dates, grouped):
 
 # List of all employees
 employees = ['Rachael Mashao', 'Vanessa Odundo', 'Bilal Hassan', 'Munene Naftaly', 'Peter Omanyo', 'Perpetual Kung`u',
-             'Joan Khabugwi', 'Ann Ngige', 'Betty Kimani', 'Florence Njunguna','Beril Achieng']
+             'Joan Khabugwi', 'Ann Ngige', 'Betty Kimani', 'Florence Njunguna']
 
 # Load the data
-data = pd.read_csv('data/Feb/FEB_ATT.csv')
+data = pd.read_excel('data/March/Kencom.xlsx')
 
 # Convert 'Time' to datetime format
 data['Time'] = pd.to_datetime(data['Time'])
@@ -46,7 +46,7 @@ holidays = []  # Add any holidays here
 custom_bday = CustomBusinessDay(weekmask=weekmask, holidays=holidays)
 
 # Create a record for each employee for each custom business day
-dates = pd.date_range(start='2024-02-01', end='2024-02-29', freq=custom_bday).date
+dates = pd.date_range(start='2024-03-01', end='2024-03-31', freq=custom_bday).date
 
 # Manually filter out Sundays
 dates = [date for date in dates if date.weekday() < 6]
@@ -55,7 +55,7 @@ final_data = generate_attendance_records(employees, dates, grouped)
 
 
 # List of employees to check and possibly generate data for
-employees_to_check = ['Lorna Kuria']
+employees_to_check = ['Lorna Kuria','Hans Zablon']
 
 for employee in employees_to_check:
     if employee not in final_data['Name'].unique():
@@ -114,4 +114,4 @@ for date in unique_dates:
 final_data['Date'] = final_data['Date'].where(final_data['Date'].shift() != final_data['Date'])
 
 # Save the final report
-final_data.to_excel('data/Feb/Kencom_ATT.xlsx', index=False)
+final_data.to_excel('report/March/Kencom_Report.xlsx', index=False)

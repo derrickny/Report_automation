@@ -3,7 +3,7 @@ import numpy as np
 import datetime
 
 # List of all employees
-employees = ['Moreen Naitore', 'Sammy Walumoli']
+employees = ['Steve Kanyi', 'Mercy Mutuku']
 
 # Load the data
 data = pd.read_excel('/Users/nyagaderrick/Developer/Report_automation/ATT JAN 24_ruaraka.xlsx')
