@@ -22,11 +22,11 @@ def generate_attendance_records(employees, dates, grouped):
     return pd.DataFrame(rows)
 
 # List of all employees
-employees = ['Rachael Mashao', 'Vanessa Odundo', 'Bilal Hassan', 'Munene Naftaly', 'Peter Omanyo', 'Perpetual Kung`u',
-             'Joan Khabugwi', 'Ann Ngige', 'Betty Kimani', 'Florence Njunguna']
+employees = ['Rachael Mashao', 'Vanessa Odundo', 'Munene Naftaly', 'Peter Omanyo', 'Perpetual Kung`u',
+             'Joan Khabugwi', 'Ann Ngige', 'Betty Kimani', 'Florence Njunguna', 'Lorna Kuria', 'Hans Zablon']
 
 # Load the data
-data = pd.read_excel('data/March/Kencom.xlsx')
+data = pd.read_excel('data/April/2.xlsx', engine='openpyxl' ,sheet_name='Sheet2')
 
 # Convert 'Time' to datetime format
 data['Time'] = pd.to_datetime(data['Time'])
@@ -46,7 +46,7 @@ holidays = []  # Add any holidays here
 custom_bday = CustomBusinessDay(weekmask=weekmask, holidays=holidays)
 
 # Create a record for each employee for each custom business day
-dates = pd.date_range(start='2024-03-01', end='2024-03-31', freq=custom_bday).date
+dates = pd.date_range(start='2024-04-08', end='2024-03-9', freq=custom_bday).date
 
 # Manually filter out Sundays
 dates = [date for date in dates if date.weekday() < 6]
@@ -54,22 +54,27 @@ dates = [date for date in dates if date.weekday() < 6]
 final_data = generate_attendance_records(employees, dates, grouped)
 
 
-# List of employees to check and possibly generate data for
-employees_to_check = ['Lorna Kuria','Hans Zablon']
+# # List of employees to check and possibly generate data for
+# employees_to_check = ['Lorna Kuria','Hans Zablon']
 
-for employee in employees_to_check:
-    if employee not in final_data['Name'].unique():
-        # If not, generate random records for them
-        check_in_times = np.random.choice(final_data['CHECK IN TIME'].unique(), len(dates))
-        check_out_times = np.random.choice(final_data['CHECK OUT TIME'].unique(), len(dates))
-        employee_data = pd.DataFrame({'Date': dates, 'Name': employee, 'CHECK IN TIME': check_in_times, 'CHECK OUT TIME': check_out_times})
-        final_data = pd.concat([final_data, employee_data])
+# for employee in employees_to_check:
+#     if employee not in final_data['Name'].unique():
+#         # If not, generate random records for them
+#         check_in_times = np.random.choice(final_data['CHECK IN TIME'].unique(), len(dates))
+#         check_out_times = np.random.choice(final_data['CHECK OUT TIME'].unique(), len(dates))
+#         employee_data = pd.DataFrame({'Date': dates, 'Name': employee, 'CHECK IN TIME': check_in_times, 'CHECK OUT TIME': check_out_times})
+#         final_data = pd.concat([final_data, employee_data])
 
 # Add a summary after the 29th day
 summary = final_data.copy()
 
-# Create a mask for rows that contain time data
-mask = summary['CHECK IN TIME'].str.contains(':', na=False)
+# Initialize mask as an empty Series
+mask = pd.Series(dtype=bool)
+
+if 'CHECK IN TIME' in summary.columns:
+    mask = summary['CHECK IN TIME'].str.contains(':', na=False)
+else:
+    print("Column 'CHECK IN TIME' does not exist in the DataFrame.")
 
 # Convert '07:30' to a string
 time_to_compare = '07:30'
@@ -114,4 +119,4 @@ for date in unique_dates:
 final_data['Date'] = final_data['Date'].where(final_data['Date'].shift() != final_data['Date'])
 
 # Save the final report
-final_data.to_excel('report/March/Kencom_Report.xlsx', index=False)
+final_data.to_excel('report/April/Kencom_Report.xlsx', index=False)

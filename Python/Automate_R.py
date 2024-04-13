@@ -6,7 +6,7 @@ import datetime
 employees = ['Moreen Naitore', 'Sammy Walumoli']
 
 # Load the data
-data = pd.read_excel('data/March/March.xlsx')
+data = pd.read_excel('data/April/8 TO 9 copy.xlsx', engine='openpyxl')
 
 # Convert 'Time' to datetime format
 data['Time'] = pd.to_datetime(data['Time'])
@@ -22,7 +22,7 @@ grouped = data.groupby(['Name', 'Date'])
 final_data = pd.DataFrame()
 
 # Create a record for each employee for each day
-for date in pd.date_range(start='2024-03-01', end='2024-03-31').date:
+for date in pd.date_range(start='2024-04-08', end='2024-04-09').date:
     # Skip Sundays
     if date.weekday() == 6:
         continue
@@ -77,4 +77,4 @@ summary.columns = ['Name', 'CHECK IN TIME', 'CHECK OUT TIME']
 final_data = pd.concat([final_data, summary], ignore_index=True)
 
 # Save the final report
-final_data.to_excel('report/March/RUARAKA_report.xlsx', index=False)
+final_data.to_excel('report/April/RUARAKA_report.xlsx', index=False)
