@@ -1,55 +1,64 @@
 import pandas as pd
 import numpy as np
+import datetime
 
-# List of all employees
-employees = ['Jackline Oira', 'Kennedy Mungai', 'Rhone Kwamboka', 'Laurraine Esisari', 'Humphrey Magawi',
-             'Cecilia Mugure', 'Faith Chepkirui', 'Nancy Macharia', 'Hidaya Saidi', 'Grace Kagwe', 'Sammy Mukhwana',
-             'Jimnah Njue',  'Bernice Kata']
+# Load the data and skip the first row
+file_path = 'data/june/USIU_JUNE_24_REPORT.xlsx'
+data = pd.read_excel(file_path, engine='openpyxl')
 
-# Load the data from the Excel file
-df = pd.read_excel('/Users/nyagaderrick/Developer/Report_automation/January 2024 Attendance-USIU.xlsx')
+# Rename columns to standard names for easier processing
+data.columns = ['Date', 'Name', 'CHECK IN TIME', 'CHECK OUT TIME'] + list(data.columns[4:])
 
-# Create a new DataFrame to hold the final data
-final_data = pd.DataFrame(columns=['Date', 'Name', 'Clock In', 'Clock Out'])
+# Define holidays
+holidays = [datetime.date(2024, 6, 1), datetime.date(2024, 6, 17)]
 
-# For each unique date, filter the employees who worked that day and add a blank row after each date
-for date in df['Date'].unique():
-    date_data = df[df['Date'] == date]
-    date_data = date_data[date_data['Name'].isin(employees)]
-    # Add a blank row after each date
-    blank_row = pd.DataFrame([['', '', '', '']], columns=['Date', 'Name', 'Clock In', 'Clock Out'])
-    date_data = pd.concat([date_data, blank_row], ignore_index=True)
-    final_data = pd.concat([final_data, date_data], ignore_index=True)
+# Convert 'Date' and 'Clock In'/'Clock Out' to datetime format
+data['Date'] = pd.to_datetime(data['Date']).dt.date
+data['CHECK IN TIME'] = pd.to_datetime(data['CHECK IN TIME'], format='%H:%M:%S', errors='coerce').dt.time
+data['CHECK OUT TIME'] = pd.to_datetime(data['CHECK OUT TIME'], format='%H:%M:%S', errors='coerce').dt.time
 
-# Replace subsequent occurrences of each date with an empty string
-final_data['Date'] = final_data['Date'].mask(final_data['Date'].duplicated(), '')
+# Initialize a list to hold processed records
+processed_records = []
 
-# Format the 'Date' column
+# Get a list of all unique employees
+employees = data['Name'].unique()
 
-final_data['Date'] = final_data['Date'].apply(lambda x: x if isinstance(x, str) else x.strftime('%d, %A, %B, %Y'))
+# Create a record for each employee for each day in June, marking holidays and missing records
+for date in pd.date_range(start='2024-06-01', end='2024-06-30').date:
+    if date.weekday() == 6:  # Skip Sundays
+        continue
+    for employee in employees:
+        if date in holidays:
+            processed_records.append({'Date': date, 'Name': employee, 'CHECK IN TIME': 'HOLIDAY', 'CHECK OUT TIME': 'HOLIDAY'})
+        else:
+            employee_records = data[(data['Name'] == employee) & (data['Date'] == date)]
+            if not employee_records.empty:
+                check_in_time = employee_records['CHECK IN TIME'].min().strftime('%H:%M') if pd.notna(employee_records['CHECK IN TIME'].min()) else '_'
+                check_out_time = employee_records['CHECK OUT TIME'].max().strftime('%H:%M') if pd.notna(employee_records['CHECK OUT TIME'].max()) else '_'
+                processed_records.append({'Date': date, 'Name': employee, 'CHECK IN TIME': check_in_time, 'CHECK OUT TIME': check_out_time})
+            else:
+                processed_records.append({'Date': date, 'Name': employee, 'CHECK IN TIME': '_', 'CHECK OUT TIME': '_'})
 
-# Create a new DataFrame for the summary report
-summary_report = pd.DataFrame(columns=['Name', 'Clock In Before 8:00', 'No Clock In/Clock Out'])
+# Convert processed records to a DataFrame
+processed_df = pd.DataFrame(processed_records)
 
-# Calculate the required statistics for each employee
-for employee in employees:
-    employee_data = final_data[final_data['Name'] == employee]
-    clock_in_between_8_and_11 = employee_data[(employee_data['Clock In'] >= '08:00') & (employee_data['Clock In'] <= '11:00')].shape[0]
-    no_clock_in_or_out = employee_data[(employee_data['Clock In'].isna()) | (employee_data['Clock Out'].isna())].shape[0]
-    new_row = pd.DataFrame([[employee, clock_in_between_8_and_11, no_clock_in_or_out]], columns=summary_report.columns)
-    summary_report = pd.concat([summary_report, new_row], ignore_index=True)
+# Add summary for missing check-ins and check-outs
+summary_df = processed_df[~processed_df['CHECK IN TIME'].isin(['HOLIDAY'])].copy()
+summary_df['Late'] = summary_df['CHECK IN TIME'].apply(lambda x: x > '08:30' if x != '_' else False)
+summary_df['No Record'] = summary_df['CHECK IN TIME'] == '_'
 
-# Add a new row with the heading 'USIU SUMMARY REPORT' in the 'Name' column
-heading = pd.DataFrame([['', 'USIU SUMMARY REPORT', '', '']], columns=['Date', 'Name', 'Clock In', 'Clock Out'])
-final_data = pd.concat([final_data, heading], ignore_index=True)
+summary = summary_df.groupby('Name').agg({'Late': 'sum', 'No Record': 'sum'}).reset_index()
+summary.columns = ['Name', 'Late', 'No Record']
 
-# Append the summary report to the main data
-summary_report = summary_report.rename(columns={'Name': 'Date', 'Clock In Before 8:00': 'Name', 'No Clock In/Clock Out': 'Clock In'})
-summary_report['Clock Out'] = ''
-final_data = pd.concat([final_data, summary_report], ignore_index=True)
+# Add summary to the processed DataFrame
+processed_df = pd.concat([processed_df, pd.DataFrame({'Date': [''], 'Name': [''], 'CHECK IN TIME': ['USIU JUNE ATTENDANCE'], 'CHECK OUT TIME': ['']})], ignore_index=True)
+processed_df = pd.concat([processed_df, pd.DataFrame({'Date': [''], 'Name': ['NAME'], 'CHECK IN TIME': ['CHECK-IN AFTER 8:30 A.M'], 'CHECK OUT TIME': ['NO CHECK IN/OUT RECORDS']})], ignore_index=True)
+summary['CHECK IN TIME'] = summary['Late']
+summary['CHECK OUT TIME'] = summary['No Record']
+processed_df = pd.concat([processed_df, summary[['Name', 'CHECK IN TIME', 'CHECK OUT TIME']]], ignore_index=True)
 
-# Specify the path to the output Excel file
-output_path = "/Users/nyagaderrick/Developer/Report_automation/JAN_2024_USIU_report.xlsx"
+# Save the final report as an Excel file
+output_path = 'report/june/USIU_JUNE_24_REPORT_PROCESSED.xlsx'
+processed_df.to_excel(output_path, index=False)
 
-# Save the DataFrame to an Excel file
-final_data.to_excel(output_path, index=False)
+print(f"Report saved to {output_path}")

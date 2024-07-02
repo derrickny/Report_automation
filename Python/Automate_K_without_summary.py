@@ -22,7 +22,7 @@ employees = ['Rachael Mashao', 'Vanessa Odundo', 'Peter Omanyo', 'Perpetual Kung
              'Joan Khabugwi', 'Ann Ngige', 'Betty Kimani', 'Florence Njunguna',
              'Lorna Kuria', 'Everlynn Nundu', 'Hans zablon']
 
-data = pd.read_excel('data/April/2.xlsx', engine='openpyxl', sheet_name='Sheet2')
+data = pd.read_excel('data/May/report_may.xls')
 data['Time'] = pd.to_datetime(data['Time'])
 data['Date'] = data['Time'].dt.date
 
